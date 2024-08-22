@@ -153,17 +153,9 @@ func updateActiveContext(selectedDomain string) {
 	}
 }
 
-func runFDKLoginCommand() error {
-	cmd := exec.Command("fdk", "login")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	return cmd.Run()
-}
-
 func runSetEnv(envName string) error {
 	fmt.Println(envName)
-	cmd := exec.Command("fdk", "env", "set", "-n", envName)
+	cmd := exec.Command("fdk", "login", "--host", envName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -183,14 +175,10 @@ func main() {
 
 	if !exit {
 		if selectedOption != "" {
-			err := runSetEnv(config.Theme.Contexts[config.Theme.ActiveContext].Env)
+			err := runSetEnv("api." + config.Theme.Contexts[config.Theme.ActiveContext].Env + ".de")
 			if err != nil {
 				log.Fatalf("failed to set environment: %v", err)
 			}
-		}
-
-		if err := runFDKLoginCommand(); err != nil {
-			log.Fatalf("failed to run fdk login command: %v", err)
 		}
 	}
 
