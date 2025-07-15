@@ -12,5 +12,7 @@ When we run `cfdk` command we get available contexts to choose. After choosing i
 
 Download this repository and run `go build -o cfdk main.go` then an executable file will be generated. Add that executable file to path and done
 
+#### &nbsp;&nbsp;&nbsp;&nbsp; OR
+
 Run below script to install and add to path automatically
 `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nithinkjoy-tech/cfdk/main/install.sh)"`
