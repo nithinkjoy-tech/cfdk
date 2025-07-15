@@ -187,8 +187,14 @@ func main() {
 	if !exit {
 		if selectedOption != "" {
 			activeCtx := config.Theme.Contexts[config.Theme.ActiveContext]
-			tld := getDomainTLD(activeCtx.Domain)
-			host := fmt.Sprintf("api.%s.%s", activeCtx.Env, tld)
+
+			var host string
+			if activeCtx.Env == "swadesh" {
+				host = "api.swadeshonline.com"
+			} else {
+				tld := getDomainTLD(activeCtx.Domain)
+				host = fmt.Sprintf("api.%s.%s", activeCtx.Env, tld)
+			}
 
 			err := runSetEnv(host)
 			if err != nil {
