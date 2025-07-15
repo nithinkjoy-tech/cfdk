@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/nsf/termbox-go"
 	"github.com/spf13/cobra"
@@ -153,6 +154,16 @@ func updateActiveContext(selectedDomain string) {
 	}
 }
 
+func getDomainTLD(domain string) string {
+	if strings.HasSuffix(domain, ".com") {
+		return "com"
+	}
+	if strings.HasSuffix(domain, ".de") {
+		return "de"
+	}
+	return "de" // default fallback
+}
+
 func runSetEnv(envName string) error {
 	fmt.Println(envName)
 	cmd := exec.Command("fdk", "login", "--host", envName)
@@ -175,11 +186,14 @@ func main() {
 
 	if !exit {
 		if selectedOption != "" {
-			err := runSetEnv("api." + config.Theme.Contexts[config.Theme.ActiveContext].Env + ".de")
+			activeCtx := config.Theme.Contexts[config.Theme.ActiveContext]
+			tld := getDomainTLD(activeCtx.Domain)
+			host := fmt.Sprintf("api.%s.%s", activeCtx.Env, tld)
+
+			err := runSetEnv(host)
 			if err != nil {
 				log.Fatalf("failed to set environment: %v", err)
 			}
 		}
 	}
-
 }
