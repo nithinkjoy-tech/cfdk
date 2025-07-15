@@ -3,26 +3,21 @@
 set -e
 
 BIN_NAME="cfdk"
-MAIN_URL="https://raw.githubusercontent.com/nithinkjoy-tech/cfdk/main/main.go"
+BIN_URL="https://raw.githubusercontent.com/nithinkjoy-tech/cfdk/main/cfdk" # change this to correct URL if needed
 LOCAL_INSTALL_DIR="$HOME/.local/bin"
 SYSTEM_INSTALL_DIR="/usr/local/bin"
 
 echo "📦 Installing $BIN_NAME..."
 
-# Ensure Go is installed
-if ! command -v go >/dev/null 2>&1; then
-  echo "❌ Go is not installed. Please install Go and try again."
-  exit 1
-fi
-
-# Create temp build directory
+# Create temporary download directory
 TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
-curl -fsSL "$MAIN_URL" -o main.go
 
-go build -o "$BIN_NAME" main.go
+# Download the prebuilt binary
+curl -fsSL "$BIN_URL" -o "$BIN_NAME"
+chmod +x "$BIN_NAME"
 
-# Check if we can write to /usr/local/bin
+# Check if we can install to /usr/local/bin
 if [ -w "$SYSTEM_INSTALL_DIR" ]; then
   echo "✅ Admin access detected. Installing to $SYSTEM_INSTALL_DIR..."
   mv "$BIN_NAME" "$SYSTEM_INSTALL_DIR/"
