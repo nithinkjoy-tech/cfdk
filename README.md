@@ -1,7 +1,7 @@
 
 # Change FDK (cfdk)
 
-This CLI tool will help us change fdk context by providing us available contexts to choose
+This CLI tool will help us change fdk context and login by providing us available contexts to choose
 
 ## Example
 When we run `cfdk` command we get available contexts to choose. After choosing it will automatically edit context.json file and update contexts and it will also set env and do a fdk login command
