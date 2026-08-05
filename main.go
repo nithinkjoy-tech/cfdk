@@ -19,6 +19,7 @@ type Context struct {
 	CompanyID     int    `json:"company_id"`
 	ThemeID       string `json:"theme_id"`
 	Env           string `json:"env"`
+	ThemeType     string `json:"theme_type"`
 }
 
 type Theme struct {
@@ -30,6 +31,8 @@ type Config struct {
 	Theme    Theme                  `json:"theme"`
 	Partners map[string]interface{} `json:"partners"`
 }
+
+const defaultThemeType = "react"
 
 var selectedOption string
 var config Config
@@ -49,6 +52,8 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("failed to read config: %v", err)
 		}
+
+		applyThemeTypeDefault(config.Theme.Contexts)
 
 		options := extractUniqueDomains(config.Theme.Contexts)
 
@@ -107,6 +112,15 @@ func writeConfig(filename string, config Config) error {
 		return err
 	}
 	return nil
+}
+
+func applyThemeTypeDefault(contexts map[string]Context) {
+	for key, context := range contexts {
+		if context.ThemeType == "" {
+			context.ThemeType = defaultThemeType
+			contexts[key] = context
+		}
+	}
 }
 
 func extractUniqueDomains(contexts map[string]Context) []string {
