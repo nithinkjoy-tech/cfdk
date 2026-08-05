@@ -53,7 +53,10 @@ var rootCmd = &cobra.Command{
 			log.Fatalf("failed to read config: %v", err)
 		}
 
-		applyThemeTypeDefault(config.Theme.Contexts)
+		rawConfig, err := readRawConfig(".fdk/context.json")
+		if err != nil {
+			log.Fatalf("failed to read config: %v", err)
+		}
 
 		options := extractUniqueDomains(config.Theme.Contexts)
 
@@ -74,8 +77,9 @@ var rootCmd = &cobra.Command{
 				case termbox.KeyEnter:
 					selectedOption = options[selected]
 					updateActiveContext(selectedOption)
+					syncRawConfig(rawConfig, config.Theme.ActiveContext)
 
-					if err := writeConfig(".fdk/context.json", config); err != nil {
+					if err := writeConfig(".fdk/context.json", rawConfig); err != nil {
 						log.Fatalf("failed to write config: %v", err)
 					}
 
@@ -102,7 +106,48 @@ func readConfig(filename string) (Config, error) {
 	return config, err
 }
 
-func writeConfig(filename string, config Config) error {
+// readRawConfig loads the config as a plain JSON tree. Writing this back instead
+// of the Config struct keeps keys cfdk doesn't model (application_token, ...)
+// from being dropped on save. UseNumber keeps numbers byte-for-byte.
+func readRawConfig(filename string) (map[string]interface{}, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var raw map[string]interface{}
+	decoder := json.NewDecoder(file)
+	decoder.UseNumber()
+	err = decoder.Decode(&raw)
+	return raw, err
+}
+
+// syncRawConfig applies cfdk's changes onto the raw JSON tree: the active
+// context, plus a theme_type default for any context missing one.
+func syncRawConfig(raw map[string]interface{}, activeContext string) {
+	theme, ok := raw["theme"].(map[string]interface{})
+	if !ok {
+		return
+	}
+	theme["active_context"] = activeContext
+
+	contexts, ok := theme["contexts"].(map[string]interface{})
+	if !ok {
+		return
+	}
+	for _, value := range contexts {
+		context, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if themeType, _ := context["theme_type"].(string); themeType == "" {
+			context["theme_type"] = defaultThemeType
+		}
+	}
+}
+
+func writeConfig(filename string, config interface{}) error {
 	configJSON, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -112,15 +157,6 @@ func writeConfig(filename string, config Config) error {
 		return err
 	}
 	return nil
-}
-
-func applyThemeTypeDefault(contexts map[string]Context) {
-	for key, context := range contexts {
-		if context.ThemeType == "" {
-			context.ThemeType = defaultThemeType
-			contexts[key] = context
-		}
-	}
 }
 
 func extractUniqueDomains(contexts map[string]Context) []string {
